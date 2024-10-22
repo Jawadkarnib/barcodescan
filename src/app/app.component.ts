@@ -1,49 +1,110 @@
-import { Component, ViewChild } from '@angular/core';
-import { ZXingScannerComponent } from '@zxing/ngx-scanner'; // Import scanner component
-import { BarcodeFormat } from '@zxing/library'; // Import BarcodeFormat
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { ZXingScannerComponent } from '@zxing/ngx-scanner';
+import { BarcodeFormat } from '@zxing/library';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Barcode Scanner App';
   scannedResult: string = '';
-  allowedFormats = [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128]; // Allowed formats
+  allowedFormats = [ 
+    BarcodeFormat.QR_CODE, 
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+    BarcodeFormat.CODE_39,
+    BarcodeFormat.CODE_93,
+    BarcodeFormat.UPC_A,
+    BarcodeFormat.UPC_E
+  ];
+  
   availableDevices: MediaDeviceInfo[] = [];
   selectedDevice!: MediaDeviceInfo;
   hasDevices = false;
   hasPermission = false;
+  isScanning = false;
+  errorMessage: string = '';
 
-  @ViewChild('scanner', { static: false }) scanner!: ZXingScannerComponent; // Reference to the scanner
+  @ViewChild('scanner') scanner!: ZXingScannerComponent;
 
   ngOnInit() {
-    // Get available devices and check if we have camera permission
-    this.scanner.camerasFound.subscribe((devices: MediaDeviceInfo[]) => {
-      this.availableDevices = devices;
-      this.hasDevices = devices && devices.length > 0;
-    });
-
-    this.scanner.camerasNotFound.subscribe(() => {
-      console.error('No cameras found.');
-    });
-
-    this.scanner.permissionResponse.subscribe((perm: boolean) => {
-      this.hasPermission = perm;
-    });
+    this.initializeScanner();
   }
 
-  startScan() {
-    if (this.availableDevices.length > 0) {
-      // Try to find the rear camera (usually the last one in the list)
-      const rearCamera = this.availableDevices.find(device => device.label.toLowerCase().includes('back')) || this.availableDevices[0];
-      this.selectedDevice = rearCamera;
-      this.scanner.device = this.selectedDevice; // Set the device for scanning
+  ngOnDestroy() {
+    this.stopScan();
+  }
+
+  private initializeScanner(): void {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      this.errorMessage = 'Browser API not supported';
+      return;
     }
+
+    // Request camera permission explicitly
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(() => {
+        this.hasPermission = true;
+      })
+      .catch(error => {
+        this.errorMessage = `Camera permission error: ${error.message}`;
+        this.hasPermission = false;
+      });
+  }
+
+  startScan(): void {
+    if (!this.hasPermission) {
+      this.errorMessage = 'Camera permission not granted';
+      return;
+    }
+
+    this.isScanning = true;
+    this.errorMessage = '';
+    this.scannedResult = '';
+
+    // Get and set the rear camera
+    navigator.mediaDevices.enumerateDevices()
+      .then(devices => {
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        this.availableDevices = videoDevices;
+        this.hasDevices = videoDevices.length > 0;
+
+        if (this.hasDevices) {
+          // Try to find the rear camera
+          const rearCamera = videoDevices.find(device => 
+            device.label.toLowerCase().includes('back') || 
+            device.label.toLowerCase().includes('rear')
+          ) || videoDevices[0];
+
+          this.selectedDevice = rearCamera;
+        } else {
+          this.errorMessage = 'No cameras found';
+        }
+      })
+      .catch(error => {
+        this.errorMessage = `Error accessing cameras: ${error.message}`;
+      });
+  }
+
+  stopScan(): void {
+    this.isScanning = false;
   }
 
   onCodeResult(resultString: string) {
     this.scannedResult = resultString;
+    // Optional: Stop scanning after successful scan
+     this.stopScan();
+    
+    // Play a success sound
+    const audio = new Audio('assets/beep.mp3');
+    audio.play().catch(error => console.log('Audio play failed:', error));
+  }
+
+  handleError(error: any): void {
+    this.errorMessage = `Scanner error: ${error}`;
+    console.error('Scanner error:', error);
   }
 }

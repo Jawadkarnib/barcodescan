@@ -1,26 +1,54 @@
 <div class="scanner-app">
   <h2>{{ title }}</h2>
 
-  <!-- Button to start scanning by selecting the rear camera -->
-  <button (click)="startScan()" [disabled]="!hasDevices || !hasPermission">Start Scanning</button>
-
-  <!-- Barcode scanner feed -->
-  <zxing-scanner 
-    #scanner
-    [formats]="allowedFormats"
-    [device]="selectedDevice"
-    (scanSuccess)="onCodeResult($event)">
-  </zxing-scanner>
-
-  <!-- Input field that will auto-fill with scanned result -->
-  <label for="barcode-result">Scanned Barcode:</label>
-  <input id="barcode-result" type="text" [value]="scannedResult" readonly />
-
-  <!-- Error messages -->
-  <div *ngIf="!hasDevices">
-    <p>No cameras found.</p>
+  <div class="scanner-controls">
+    <button 
+      (click)="startScan()" 
+      [disabled]="!hasPermission || isScanning"
+      class="scan-button">
+      Start Scanning
+    </button>
+    <button 
+      (click)="stopScan()" 
+      [disabled]="!isScanning"
+      class="stop-button">
+      Stop Scanning
+    </button>
   </div>
-  <div *ngIf="!hasPermission">
-    <p>Please grant camera permission to start scanning.</p>
+
+  <div class="scanner-container" *ngIf="isScanning">
+    <zxing-scanner
+      #scanner
+      [formats]="allowedFormats"
+      [device]="selectedDevice"
+      [enable]="isScanning"
+      (scanSuccess)="onCodeResult($event)"
+      (scanError)="handleError($event)"
+      [tryHarder]="true"
+    ></zxing-scanner>
+  </div>
+
+  <div class="result-container">
+    <label for="barcode-result">Scanned Barcode:</label>
+    <input 
+      id="barcode-result" 
+      type="text" 
+      [value]="scannedResult" 
+      readonly 
+      class="result-input"
+    />
+  </div>
+
+  <div class="error-container" *ngIf="errorMessage">
+    <p class="error-message">{{ errorMessage }}</p>
+  </div>
+
+  <div class="status-container">
+    <p *ngIf="!hasDevices" class="status-message">
+      No cameras found on this device.
+    </p>
+    <p *ngIf="!hasPermission" class="status-message">
+      Camera permission is required. Please grant access when prompted.
+    </p>
   </div>
 </div>
