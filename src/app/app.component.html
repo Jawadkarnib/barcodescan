@@ -1,54 +1,62 @@
-<div class="scanner-app">
-  <h2>{{ title }}</h2>
-
-  <div class="scanner-controls">
+<div class="app-container">
+  <!-- Normal view when scanner is not active -->
+  <div class="content-container" [class.hidden]="scannerActive">
+    <h2>{{ title }}</h2>
+    
     <button 
       (click)="startScan()" 
-      [disabled]="!hasPermission || isScanning"
+      [disabled]="!hasPermission"
       class="scan-button">
-      Start Scanning
+      Start Scanner
     </button>
-    <button 
-      (click)="stopScan()" 
-      [disabled]="!isScanning"
-      class="stop-button">
-      Stop Scanning
-    </button>
+
+    <div class="result-container" *ngIf="scannedResult">
+      <label for="barcode-result">Scanned Barcode:</label>
+      <input 
+        id="barcode-result" 
+        type="text" 
+        [value]="scannedResult" 
+        readonly 
+        class="result-input"
+      />
+    </div>
+
+    <div class="error-container" *ngIf="errorMessage">
+      <p class="error-message">{{ errorMessage }}</p>
+    </div>
   </div>
 
-  <div class="scanner-container" *ngIf="isScanning">
-    <zxing-scanner
-      #scanner
-      [formats]="allowedFormats"
-      [device]="selectedDevice"
-      [enable]="isScanning"
-      (scanSuccess)="onCodeResult($event)"
-      (scanError)="handleError($event)"
-      [tryHarder]="true"
-    ></zxing-scanner>
-  </div>
+  <!-- Fullscreen scanner overlay -->
+  <div class="scanner-overlay" *ngIf="scannerActive">
+    <div class="scanner-container">
+      <zxing-scanner
+        #scanner
+        [formats]="allowedFormats"
+        [enable]="isScanning"
+        [device]="currentDevice"
+        [torch]="torchEnabled"
+        [tryHarder]="true"
+        (scanSuccess)="onCodeResult($event)"
+        (scanError)="handleError($event)">
+      </zxing-scanner>
 
-  <div class="result-container">
-    <label for="barcode-result">Scanned Barcode:</label>
-    <input 
-      id="barcode-result" 
-      type="text" 
-      [value]="scannedResult" 
-      readonly 
-      class="result-input"
-    />
-  </div>
+      <!-- Scanner UI Overlay -->
+      <div class="scanner-ui">
+        <!-- Close button -->
+        <button class="close-button" (click)="stopScan()">
+          ✕
+        </button>
 
-  <div class="error-container" *ngIf="errorMessage">
-    <p class="error-message">{{ errorMessage }}</p>
-  </div>
+        <!-- Torch toggle -->
+        <button class="torch-button" (click)="toggleTorch()">
+          {{ torchEnabled ? '💡 Off' : '💡 On' }}
+        </button>
 
-  <div class="status-container">
-    <p *ngIf="!hasDevices" class="status-message">
-      No cameras found on this device.
-    </p>
-    <p *ngIf="!hasPermission" class="status-message">
-      Camera permission is required. Please grant access when prompted.
-    </p>
+        <!-- Scanning area indicator -->
+        <div class="scan-region" [class.success]="scanSuccess">
+          <div class="scan-feedback">{{ scanFeedback }}</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
