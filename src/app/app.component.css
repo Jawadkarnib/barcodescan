@@ -1,0 +1,22 @@
+.scanner-app {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  zxing-scanner {
+    display: block;
+    margin: 0 auto 20px;
+    max-width: 400px;
+  }
+  
+  input {
+    padding: 10px;
+    font-size: 1.2em;
+    text-align: center;
+    margin: 10px auto;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
