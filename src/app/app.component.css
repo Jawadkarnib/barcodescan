@@ -87,6 +87,46 @@
   right: 20px;
 }
 
+/* New scan trigger button styles */
+.scan-trigger-button {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 30px;
+  font-size: 18px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+  z-index: 1001;
+}
+
+.scan-trigger-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.scan-trigger-button.scanning {
+  background-color: #f44336;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.05);
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+}
+
 .scan-region {
   position: absolute;
   top: 50%;

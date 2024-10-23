@@ -23,16 +23,17 @@ export class AppComponent implements OnInit, OnDestroy {
   
   currentDevice: MediaDeviceInfo | undefined;
   hasPermission = false;
-  isScanning = false;
-  errorMessage: string = '';
   scannerActive = false;
   isProcessing = false;
   torchEnabled = false;
   scanFeedback = '';
   scanSuccess = false;
+  scanningEnabled = false; // New flag to control barcode detection
   animationTimeout: any;
+  previewEnabled = true; // New flag to control camera preview
 
   @ViewChild('scanner') scanner!: ZXingScannerComponent;
+  errorMessage!: string;
 
   constructor(private cd: ChangeDetectorRef) {}
 
@@ -89,44 +90,62 @@ export class AppComponent implements OnInit, OnDestroy {
       this.initializeScanner();
       return;
     }
-
     this.scannerActive = true;
-    this.isScanning = true;
+    this.previewEnabled = true; // Enable camera preview
+    this.scanningEnabled = false; // Don't start scanning yet
     this.scanSuccess = false;
-    this.scanFeedback = 'Position barcode in the center';
+    this.scanFeedback = 'Center the barcode and tap Scan';
     this.scannedResult = '';
-    document.body.style.overflow = 'hidden'; // Prevent scrolling
+    document.body.style.overflow = 'hidden';
+    this.cd.detectChanges();
+  }
+
+  // Method to start actual barcode scanning
+  triggerScan(): void {
+    if (this.scanningEnabled) {
+      // If already scanning, stop it
+      this.scanningEnabled = false;
+      this.scanFeedback = 'Center the barcode and tap Scan';
+    } else {
+      // Start scanning
+      this.scanningEnabled = true;
+      this.scanFeedback = 'Scanning...';
+    }
     this.cd.detectChanges();
   }
 
   stopScan(): void {
     this.scannerActive = false;
-    this.isScanning = false;
+    this.previewEnabled = false;
+    this.scanningEnabled = false;
     this.scanSuccess = false;
-    document.body.style.overflow = ''; // Restore scrolling
+    document.body.style.overflow = '';
     this.cd.detectChanges();
   }
 
   onCodeResult(resultString: string) {
-    if (this.isProcessing) return; // Prevent multiple scans
+    // Only process result if scanning is enabled
+    if (!this.scanningEnabled || this.isProcessing) return;
+    
     this.isProcessing = true;
     this.scanSuccess = true;
     this.scanFeedback = 'Barcode detected!';
     this.scannedResult = resultString;
-
+    
     // Play success sound
     const audio = new Audio('assets/beep.mp3');
     audio.play().catch(error => console.log('Audio play failed:', error));
-
+    
     // Show success animation and close scanner
     this.animationTimeout = setTimeout(() => {
       this.stopScan();
       this.isProcessing = false;
       this.cd.detectChanges();
-    }, 1500); // Close after 1.5 seconds
+    }, 1500);
   }
 
   handleError(error: any): void {
+    if (!this.scanningEnabled) return; // Ignore errors when not actively scanning
     console.error('Scanner error:', error);
     this.scanFeedback = 'Scanner error. Please try again.';
     this.cd.detectChanges();

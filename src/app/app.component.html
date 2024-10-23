@@ -32,7 +32,7 @@
       <zxing-scanner
         #scanner
         [formats]="allowedFormats"
-        [enable]="isScanning"
+        [enable]="previewEnabled"
         [device]="currentDevice"
         [torch]="torchEnabled"
         [tryHarder]="true"
@@ -56,6 +56,14 @@
         <div class="scan-region" [class.success]="scanSuccess">
           <div class="scan-feedback">{{ scanFeedback }}</div>
         </div>
+
+        <!-- Scan trigger button -->
+        <button 
+          class="scan-trigger-button" 
+          (click)="triggerScan()" 
+          [class.scanning]="scanningEnabled">
+          {{ scanningEnabled ? 'Stop Scanning' : 'Tap to Scan' }}
+        </button>
       </div>
     </div>
   </div>
