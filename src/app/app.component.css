@@ -198,3 +198,23 @@
 .scan-region.success {
   animation: scanSuccess 0.3s ease-out;
 }
+::ng-deep .scanner-overlay zxing-scanner {
+  width: 100vw;
+  height: 100vh;
+}
+
+::ng-deep .scanner-overlay zxing-scanner video {
+  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.scan-region {
+  /* Increase scanning area for large barcodes */
+  width: 90%;
+  max-width: 400px;
+  height: 250px;
+}
+

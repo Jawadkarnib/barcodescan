@@ -29,16 +29,20 @@
   <!-- Fullscreen scanner overlay -->
   <div class="scanner-overlay" *ngIf="scannerActive">
     <div class="scanner-container">
-      <zxing-scanner
-        #scanner
-        [formats]="allowedFormats"
-        [enable]="previewEnabled"
-        [device]="currentDevice"
-        [torch]="torchEnabled"
-        [tryHarder]="true"
-        (scanSuccess)="onCodeResult($event)"
-        (scanError)="handleError($event)">
-      </zxing-scanner>
+   <zxing-scanner
+      #scanner
+      [formats]="allowedFormats"
+      [enable]="previewEnabled"
+      [device]="currentDevice"
+      [torch]="torchEnabled"
+      [tryHarder]="true"
+      [constraints]="{ video: videoConstraints }"
+      [autofocusEnabled]="true"
+      [hints]="hints"
+      (scanSuccess)="onCodeResult($event)"
+      (scanError)="handleError($event)">
+    </zxing-scanner>
+
 
       <!-- Scanner UI Overlay -->
       <div class="scanner-ui">

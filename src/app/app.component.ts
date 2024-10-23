@@ -1,6 +1,6 @@
 import { Component, ViewChild, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ZXingScannerComponent } from '@zxing/ngx-scanner';
-import { BarcodeFormat } from '@zxing/library';
+import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 
 @Component({
   selector: 'app-root',
@@ -28,14 +28,32 @@ export class AppComponent implements OnInit, OnDestroy {
   torchEnabled = false;
   scanFeedback = '';
   scanSuccess = false;
-  scanningEnabled = false; // New flag to control barcode detection
+  scanningEnabled = false;
   animationTimeout: any;
-  previewEnabled = true; // New flag to control camera preview
+  previewEnabled = true;
+
+  // Define video constraints
+  videoConstraints: MediaTrackConstraints = {
+    width: { min: 640, ideal: 1920, max: 1920 },
+    height: { min: 480, ideal: 1080, max: 1080 },
+    facingMode: 'environment',
+    aspectRatio: { ideal: 1.7777777778 }
+  };
+
+  // Define hints map
+  hints = new Map<DecodeHintType, any>();
 
   @ViewChild('scanner') scanner!: ZXingScannerComponent;
   errorMessage!: string;
 
-  constructor(private cd: ChangeDetectorRef) {}
+  constructor(private cd: ChangeDetectorRef) {
+    // Initialize hints
+    this.hints.set(DecodeHintType.TRY_HARDER, true);
+    this.hints.set(DecodeHintType.POSSIBLE_FORMATS, this.allowedFormats);
+    this.hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
+    this.hints.set(DecodeHintType.ASSUME_GS1, true);
+    this.hints.set(DecodeHintType.PURE_BARCODE, false);
+  }
 
   ngOnInit() {
     this.initializeScanner();
@@ -55,11 +73,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     navigator.mediaDevices.getUserMedia({ 
-      video: { 
-        facingMode: 'environment',
-        width: { ideal: window.innerWidth },
-        height: { ideal: window.innerHeight }
-      } 
+      video: this.videoConstraints
     })
     .then(() => {
       this.hasPermission = true;
@@ -76,10 +90,12 @@ export class AppComponent implements OnInit, OnDestroy {
       .then(devices => {
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         if (videoDevices.length > 0) {
-          this.currentDevice = videoDevices.find(device => 
-            device.label.toLowerCase().includes('back') || 
-            device.label.toLowerCase().includes('rear')
-          ) || videoDevices[0];
+          // Prefer high-resolution back camera
+          this.currentDevice = videoDevices.find(device => {
+            const label = device.label.toLowerCase();
+            return (label.includes('back') || label.includes('rear')) &&
+                   (label.includes('hd') || label.includes('high'));
+          }) || videoDevices[0];
         }
         this.cd.detectChanges();
       });
@@ -90,26 +106,25 @@ export class AppComponent implements OnInit, OnDestroy {
       this.initializeScanner();
       return;
     }
+    
     this.scannerActive = true;
-    this.previewEnabled = true; // Enable camera preview
-    this.scanningEnabled = false; // Don't start scanning yet
+    this.previewEnabled = true;
+    this.scanningEnabled = false;
     this.scanSuccess = false;
-    this.scanFeedback = 'Center the barcode and tap Scan';
+    this.scanFeedback = 'Position the barcode within the frame and tap Scan';
     this.scannedResult = '';
+    
     document.body.style.overflow = 'hidden';
     this.cd.detectChanges();
   }
 
-  // Method to start actual barcode scanning
   triggerScan(): void {
     if (this.scanningEnabled) {
-      // If already scanning, stop it
       this.scanningEnabled = false;
-      this.scanFeedback = 'Center the barcode and tap Scan';
+      this.scanFeedback = 'Position the barcode within the frame and tap Scan';
     } else {
-      // Start scanning
       this.scanningEnabled = true;
-      this.scanFeedback = 'Scanning...';
+      this.scanFeedback = 'Move camera closer or further as needed...';
     }
     this.cd.detectChanges();
   }
@@ -124,7 +139,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onCodeResult(resultString: string) {
-    // Only process result if scanning is enabled
     if (!this.scanningEnabled || this.isProcessing) return;
     
     this.isProcessing = true;
@@ -132,11 +146,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.scanFeedback = 'Barcode detected!';
     this.scannedResult = resultString;
     
-    // Play success sound
     const audio = new Audio('assets/beep.mp3');
     audio.play().catch(error => console.log('Audio play failed:', error));
     
-    // Show success animation and close scanner
     this.animationTimeout = setTimeout(() => {
       this.stopScan();
       this.isProcessing = false;
@@ -145,9 +157,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   handleError(error: any): void {
-    if (!this.scanningEnabled) return; // Ignore errors when not actively scanning
+    if (!this.scanningEnabled) return;
     console.error('Scanner error:', error);
-    this.scanFeedback = 'Scanner error. Please try again.';
+    this.scanFeedback = 'Adjust distance or angle and try again';
     this.cd.detectChanges();
   }
 
