@@ -11,11 +11,14 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'Barcode Scanner';
   scannedResult: string = '';
   allowedFormats = [ 
+    BarcodeFormat.QR_CODE, 
     BarcodeFormat.CODE_128,
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
     BarcodeFormat.CODE_39,
     BarcodeFormat.CODE_93,
-    BarcodeFormat.ITF,
-    BarcodeFormat.CODABAR
+    BarcodeFormat.UPC_A,
+    BarcodeFormat.UPC_E
   ];
   
   currentDevice: MediaDeviceInfo | undefined;
