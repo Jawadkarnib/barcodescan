@@ -54,7 +54,14 @@
 
         <!-- Scanning area indicator -->
         <div class="scan-region" [class.success]="scanSuccess">
-          <div class="scan-feedback">{{ scanFeedback }}</div>
+          <!-- Corner markers for alignment -->
+          <div class="corner-marker top-left"></div>
+          <div class="corner-marker top-right"></div>
+          <div class="corner-marker bottom-left"></div>
+          <div class="corner-marker bottom-right"></div>
+          <div class="scan-feedback" [class.scanning]="scanningEnabled">
+            {{ scanFeedback }}
+          </div>
         </div>
 
         <!-- Scan trigger button -->

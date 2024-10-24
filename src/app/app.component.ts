@@ -11,14 +11,11 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'Barcode Scanner';
   scannedResult: string = '';
   allowedFormats = [ 
-    BarcodeFormat.QR_CODE, 
     BarcodeFormat.CODE_128,
-    BarcodeFormat.EAN_13,
-    BarcodeFormat.EAN_8,
     BarcodeFormat.CODE_39,
     BarcodeFormat.CODE_93,
-    BarcodeFormat.UPC_A,
-    BarcodeFormat.UPC_E
+    BarcodeFormat.ITF,
+    BarcodeFormat.CODABAR
   ];
   
   currentDevice: MediaDeviceInfo | undefined;
@@ -31,7 +28,15 @@ export class AppComponent implements OnInit, OnDestroy {
   scanningEnabled = false; // New flag to control barcode detection
   animationTimeout: any;
   previewEnabled = true; // New flag to control camera preview
-
+  scannerConstraints = {
+    video: {
+      facingMode: 'environment',
+      width: { ideal: 1920, min: 1280 },
+      height: { ideal: 1080, min: 720 },
+      aspectRatio: { ideal: 1.7777777778 },
+      focusMode: 'continuous'
+    }
+  };
   @ViewChild('scanner') scanner!: ZXingScannerComponent;
   errorMessage!: string;
 
@@ -57,8 +62,9 @@ export class AppComponent implements OnInit, OnDestroy {
     navigator.mediaDevices.getUserMedia({ 
       video: { 
         facingMode: 'environment',
-        width: { ideal: window.innerWidth },
-        height: { ideal: window.innerHeight }
+        width: { ideal: 1920, min: 1280 },
+        height: { ideal: 1080, min: 720 },
+        aspectRatio: { ideal: 1.7777777778 },
       } 
     })
     .then(() => {
@@ -91,25 +97,22 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
     this.scannerActive = true;
-    this.previewEnabled = true; // Enable camera preview
-    this.scanningEnabled = false; // Don't start scanning yet
+    this.previewEnabled = true;
+    this.scanningEnabled = false;
     this.scanSuccess = false;
-    this.scanFeedback = 'Center the barcode and tap Scan';
+    this.scanFeedback = 'Position the entire barcode within the scanning area';
     this.scannedResult = '';
     document.body.style.overflow = 'hidden';
     this.cd.detectChanges();
   }
 
-  // Method to start actual barcode scanning
   triggerScan(): void {
     if (this.scanningEnabled) {
-      // If already scanning, stop it
       this.scanningEnabled = false;
-      this.scanFeedback = 'Center the barcode and tap Scan';
+      this.scanFeedback = 'Position the entire barcode within the scanning area';
     } else {
-      // Start scanning
       this.scanningEnabled = true;
-      this.scanFeedback = 'Scanning...';
+      this.scanFeedback = 'Scanning large barcode...';
     }
     this.cd.detectChanges();
   }

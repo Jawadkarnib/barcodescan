@@ -218,3 +218,62 @@
   height: 250px;
 }
 
+.scan-region {
+  width: 90%;
+  max-width: 600px;
+  height: 180px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  position: relative;
+}
+
+.corner-marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+}
+
+.top-left {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.top-right {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.bottom-left {
+  bottom: -2px;
+  left: -2px;
+  border-right: none;
+  border-top: none;
+}
+
+.bottom-right {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+.scan-feedback.scanning {
+  background-color: rgba(76, 175, 80, 0.8);
+}
+
+::ng-deep .scanner-overlay zxing-scanner {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+::ng-deep .scanner-overlay zxing-scanner video {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+}
